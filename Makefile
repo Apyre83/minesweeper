@@ -6,8 +6,7 @@ SOURCES = srcs/main.cpp \
           srcs/model/Grid.cpp \
           srcs/controller/GameController.cpp \
           srcs/view/CellButton.cpp \
-          srcs/view/MainWindow.cpp \
-          srcs/utils/Command.cpp
+          srcs/view/MainWindow.cpp
 
 INCLUDE = include/
 

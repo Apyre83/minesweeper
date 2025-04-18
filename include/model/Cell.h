@@ -19,6 +19,9 @@ public:
 	bool isRevealed() const;
     void setRevealed(bool revealed);
 
+	bool isFlagged() const;
+    void setFlagged(bool flagged);
+
 private:
     bool mine;
     int adjacentMines;

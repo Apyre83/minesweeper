@@ -1,6 +1,6 @@
 #include "model/Cell.h"
 
-Cell::Cell() : mine(false), adjacentMines(0), state(CellState::Hidden) {}
+Cell::Cell() : mine(false), adjacentMines(0), state(CellState::Hidden), revealed(false) {}
 
 void Cell::reveal() {
     if (state == CellState::Hidden)
@@ -28,3 +28,15 @@ void Cell::setRevealed(bool r) {
     revealed = r;
 }
 
+bool Cell::isFlagged() const {
+	return state == CellState::Flagged;
+}
+
+void Cell::setFlagged(bool f) {
+	if (f == true && revealed == false) {
+		state = CellState::Flagged;
+	}
+	else if (f == false && state == CellState::Flagged) {
+		state = CellState::Hidden;
+	}
+}

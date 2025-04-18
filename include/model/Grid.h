@@ -7,7 +7,12 @@
 
 class Grid {
 public:
+    Grid();
     Grid(int width, int height, int mines);
+	Grid(const Grid& other);
+	Grid& operator=(const Grid& other);
+
+
     void reset(int width, int height, int mines);
 
     Cell& getCell(int x, int y);
@@ -26,7 +31,7 @@ public:
 
 	void placeMinesAvoiding(int safeX, int safeY);
 
-	bool	minesPlaced;
+	bool	minesPlaced = false;
 
     void calculateAdjacents();
 

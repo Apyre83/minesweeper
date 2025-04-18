@@ -39,7 +39,7 @@ MainWindow::MainWindow(GameController& c) : controller(c), vbox(Gtk::ORIENTATION
     vbox.pack_start(grid);
 
     add(vbox);
-    buildGrid();  // Build grid only once
+    buildGrid();
     show_all_children();
 }
 
@@ -53,14 +53,35 @@ void MainWindow::buildGrid() {
             if (grid.get_child_at(x, y) == nullptr) {
                 auto button = Gtk::make_managed<CellButton>(x, y);
 
-				button->signal_clicked().connect([this, x, y]() {
-					std::cout << "Cell clicked at (" << x << ", " << y << ")" << std::endl;
-					lastClickedX = x;
-					lastClickedY = y;
-					controller.onCellClicked(x, y);
-					update();
-				});
+                button->signal_clicked().connect([this, x, y]() {
+                    const Cell& cell = controller.getGrid().getCell(x, y);
+                    std::cout << "Left-clicked (" << x << ", " << y << ")"
+                              << " | Mine: " << (cell.isMine() ? "yes" : "no")
+                              << " | Adjacent: " << cell.getAdjacentMines()
+                              << " | Revealed: " << (cell.isRevealed() ? "yes" : "no")
+                              << " | Flagged: " << (cell.isFlagged() ? "yes" : "no")
+                              << std::endl;
 
+                    lastClickedX = x;
+                    lastClickedY = y;
+                    controller.onCellClicked(x, y);
+                    update();
+                });
+
+                button->add_events(Gdk::BUTTON_PRESS_MASK);
+                button->signal_button_press_event().connect([this, x, y](GdkEventButton* event) {
+                    if (event->button == 3) { // Right-click
+                        Cell& cell = controller.getGrid().getCell(x, y);
+                        if (!cell.isRevealed()) {
+                            cell.setFlagged(!cell.isFlagged());
+                            std::cout << "Right-clicked (" << x << ", " << y << ") -> "
+                                      << (cell.isFlagged() ? "Flagged" : "Unflagged") << std::endl;
+                            update();
+                        }
+                        return true;
+                    }
+                    return false;
+                });
 
                 grid.attach(*button, x, y);
             }
@@ -70,13 +91,12 @@ void MainWindow::buildGrid() {
 }
 
 
+
 void MainWindow::update() {
-    std::cout << "Updating grid..." << std::endl;
 
     int w = controller.getGrid().getWidth();
     int h = controller.getGrid().getHeight();
 
-    bool lost = false;
     for (int x = 0; x < w; ++x) {
         for (int y = 0; y < h; ++y) {
             auto button = dynamic_cast<CellButton*>(grid.get_child_at(x, y));
@@ -86,17 +106,21 @@ void MainWindow::update() {
             if (cell.isRevealed()) {
                 if (cell.isMine()) {
                     button->set_label("💣");
-                } else {
+                }
+				else {
                     int adj = cell.getAdjacentMines();
                     button->set_label(adj > 0 ? std::to_string(adj) : "0");
-                }
-            } else {
-                button->set_label("");  // hidden cell
+             	}
+			} 
+			else if (cell.isFlagged()) {
+				button->set_label("🚩");
+			}
+            else {
+                button->set_label("");
             }
         }
     }
 
-    // 💥 Check only the *last clicked* cell for loss
     int cx = controller.getLastClickedX();
     int cy = controller.getLastClickedY();
     if (cx >= 0 && cy >= 0 && controller.getGrid().getCell(cx, cy).isMine()) {

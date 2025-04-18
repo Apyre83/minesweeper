@@ -2,9 +2,8 @@
 #define __GAMECONTROLLER_H
 
 #include "../model/Grid.h"
-#include "../utils/Command.h"
 #include <stack>
-#include <memory>
+#include <stdbool.h>
 
 class GameController {
 public:
@@ -21,11 +20,13 @@ public:
 
 
 private:
-    Grid grid;
-    std::stack<std::unique_ptr<Command>> undoStack;
-    std::stack<std::unique_ptr<Command>> redoStack;
+    Grid	grid;
+	Grid	undo_grid;
+	Grid	redo_grid;
+	bool	can_redo = false; /* Can only redo if he pressed undo as last action */
 
-    void executeCommand(std::unique_ptr<Command> cmd);
+	int	w, h, mines;
+
 
 	int	lastClickedX = -1;
 	int	lastClickedY = -1;

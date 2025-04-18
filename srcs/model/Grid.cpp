@@ -1,9 +1,29 @@
 #include "model/Grid.h"
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 
-Grid::Grid(int w, int h, int m) : width(w), height(h) {
+Grid::Grid() : width(0), height(0), cells(), totalMines(0) {}
+
+Grid::Grid(int w, int h, int m) : width(w), height(h), cells(), totalMines(0) {
     reset(w, h, m);
+}
+
+Grid::Grid(const Grid& other)
+    : width(other.width),
+      height(other.height),
+      cells(other.cells),
+      totalMines(other.totalMines) {}
+
+
+Grid& Grid::operator=(const Grid& other) {
+    if (this != &other) {
+        width = other.width;
+        height = other.height;
+        cells = other.cells;
+        totalMines = other.totalMines;
+    }
+    return *this;
 }
 
 void Grid::reset(int w, int h, int mines) {
@@ -15,18 +35,6 @@ void Grid::reset(int w, int h, int mines) {
 }
 
 
-void Grid::placeMines(int count) {
-    std::srand(std::time(nullptr));
-    while (count > 0) {
-        int x = std::rand() % width;
-        int y = std::rand() % height;
-        if (!cells[x][y].isMine()) {
-            cells[x][y].setMine(true);
-            count--;
-        }
-    }
-}
-
 void Grid::placeMinesAvoiding(int safeX, int safeY) {
     int count = totalMines;
     std::srand(std::time(nullptr));
@@ -35,7 +43,6 @@ void Grid::placeMinesAvoiding(int safeX, int safeY) {
         int x = std::rand() % width;
         int y = std::rand() % height;
 
-        // Skip the 3x3 region around the first clicked cell
         if (std::abs(x - safeX) <= 1 && std::abs(y - safeY) <= 1)
             continue;
 
@@ -44,6 +51,18 @@ void Grid::placeMinesAvoiding(int safeX, int safeY) {
             count--;
         }
     }
+
+	std::cout << "Mines placed. Current Grid (M = mine, number = adjacent mines):" << std::endl;
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			if (cells[x][y].isMine()) {
+				std::cout << "M ";
+			} else {
+				std::cout << cells[x][y].getAdjacentMines() << " ";
+			}
+		}
+		std::cout << std::endl;
+	}
 }
 
 
@@ -70,8 +89,7 @@ int Grid::getHeight() const { return height; }
 
 
 bool Grid::isRevealed(int x, int y) const {
-    // Check if the cell at (x, y) is revealed
-    return cells[x][y].isRevealed();  // Assuming Cell class has an isRevealed() method
+    return cells[x][y].isRevealed();
 }
 
 bool Grid::hasWon() const {
@@ -93,10 +111,12 @@ void Grid::floodReveal(int x, int y) {
 
     cells[x][y].setRevealed(true);
 
-    if (cells[x][y].getAdjacentMines() > 0)
-        return;  // stop at numbered cell
+    if (cells[x][y].getAdjacentMines() > 0) {
+        return;
+	}
 
-    // recurse to neighbors
+
+
     for (int dx = -1; dx <= 1; ++dx) {
         for (int dy = -1; dy <= 1; ++dy) {
             if (dx != 0 || dy != 0) {
