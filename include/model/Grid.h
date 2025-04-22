@@ -35,6 +35,8 @@ public:
 
     void calculateAdjacents();
 
+	void	setMinesPlaced(bool val) { minesPlaced = val; };
+
 private:
     int width, height;
     std::vector<std::vector<Cell>> cells;

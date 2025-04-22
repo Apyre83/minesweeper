@@ -5,6 +5,7 @@ GameController::GameController(int w, int h, int mines) : grid(w, h, mines), und
 
 
 void GameController::onCellClicked(int x, int y) {
+
     if (!grid.minesPlaced) {
 		grid.placeMinesAvoiding(x, y);
 		grid.calculateAdjacents();
