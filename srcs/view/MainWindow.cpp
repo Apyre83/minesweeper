@@ -9,13 +9,11 @@ MainWindow::MainWindow(GameController& c) : controller(c), vbox(Gtk::ORIENTATION
     set_border_width(10);
 
     undoButton.signal_clicked().connect([this]() { 
-        std::cout << "Undo button clicked" << std::endl;
         controller.undo(); 
         update(); 
     });
 
     redoButton.signal_clicked().connect([this]() { 
-        std::cout << "Redo button clicked" << std::endl;
         controller.redo(); 
         update(); 
     });
@@ -27,7 +25,6 @@ MainWindow::MainWindow(GameController& c) : controller(c), vbox(Gtk::ORIENTATION
     });
 
     restartButton.signal_clicked().connect([this]() {
-        std::cout << "Restart button clicked" << std::endl;
         controller.getGrid().reset(10, 10, 10);
         buildGrid();
     });
@@ -43,9 +40,13 @@ MainWindow::MainWindow(GameController& c) : controller(c), vbox(Gtk::ORIENTATION
     show_all_children();
 }
 
-void MainWindow::buildGrid() {
-    std::cout << "Building grid..." << std::endl;
+void MainWindow::updateUndoRedoButtons() {
+    undoButton.set_sensitive(controller.get_can_undo());
+    redoButton.set_sensitive(controller.get_can_redo());
+}
 
+
+void MainWindow::buildGrid() {
     int w = controller.getGrid().getWidth();
     int h = controller.getGrid().getHeight();
     for (int x = 0; x < w; ++x) {
@@ -54,14 +55,6 @@ void MainWindow::buildGrid() {
                 auto button = Gtk::make_managed<CellButton>(x, y);
 
                 button->signal_clicked().connect([this, x, y]() {
-                    const Cell& cell = controller.getGrid().getCell(x, y);
-                    std::cout << "Left-clicked (" << x << ", " << y << ")"
-                              << " | Mine: " << (cell.isMine() ? "yes" : "no")
-                              << " | Adjacent: " << cell.getAdjacentMines()
-                              << " | Revealed: " << (cell.isRevealed() ? "yes" : "no")
-                              << " | Flagged: " << (cell.isFlagged() ? "yes" : "no")
-                              << std::endl;
-
                     lastClickedX = x;
                     lastClickedY = y;
                     controller.onCellClicked(x, y);
@@ -70,23 +63,21 @@ void MainWindow::buildGrid() {
 
                 button->add_events(Gdk::BUTTON_PRESS_MASK);
                 button->signal_button_press_event().connect([this, x, y](GdkEventButton* event) {
-                    if (event->button == 3) { // Right-click
-                        Cell& cell = controller.getGrid().getCell(x, y);
-                        if (!cell.isRevealed()) {
-                            cell.setFlagged(!cell.isFlagged());
-                            std::cout << "Right-clicked (" << x << ", " << y << ") -> "
-                                      << (cell.isFlagged() ? "Flagged" : "Unflagged") << std::endl;
-                            update();
-                        }
-                        return true;
-                    }
-                    return false;
-                });
+					if (event->button == 3) {
+						controller.onCellRightClicked(x, y);
+						update();
+						return true;
+					}
+					return false;
+				});
+
 
                 grid.attach(*button, x, y);
             }
         }
     }
+
+	updateUndoRedoButtons();
     show_all_children();
 }
 
@@ -96,6 +87,8 @@ void MainWindow::update() {
 
     int w = controller.getGrid().getWidth();
     int h = controller.getGrid().getHeight();
+
+	updateUndoRedoButtons();
 
     for (int x = 0; x < w; ++x) {
         for (int y = 0; y < h; ++y) {

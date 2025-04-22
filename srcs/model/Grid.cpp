@@ -51,18 +51,6 @@ void Grid::placeMinesAvoiding(int safeX, int safeY) {
             count--;
         }
     }
-
-	std::cout << "Mines placed. Current Grid (M = mine, number = adjacent mines):" << std::endl;
-	for (int y = 0; y < height; ++y) {
-		for (int x = 0; x < width; ++x) {
-			if (cells[x][y].isMine()) {
-				std::cout << "M ";
-			} else {
-				std::cout << cells[x][y].getAdjacentMines() << " ";
-			}
-		}
-		std::cout << std::endl;
-	}
 }
 
 

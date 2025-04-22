@@ -30,6 +30,7 @@ private:
 	int lastClickedY = -1;
 
 
+	void updateUndoRedoButtons();
 };
 
 

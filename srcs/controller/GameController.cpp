@@ -5,9 +5,6 @@ GameController::GameController(int w, int h, int mines) : grid(w, h, mines), und
 
 
 void GameController::onCellClicked(int x, int y) {
-
-	undo_grid = grid;
-
     if (!grid.minesPlaced) {
 		grid.placeMinesAvoiding(x, y);
 		grid.calculateAdjacents();
@@ -17,16 +14,13 @@ void GameController::onCellClicked(int x, int y) {
     if (!grid.isValid(x, y)) return;
 
     Cell& cell = grid.getCell(x, y);
-    if (cell.isRevealed()) {
-		std::cout << "cell at x = " << x << " and y = " << y << " is revealed" << std::endl;
-		return;
-	}
+    if (cell.isRevealed()) { return; }
+
+	undo_grid = grid;
+	can_undo = true;
 
     lastClickedX = x;
     lastClickedY = y;
-
-
-
 
     if (cell.isMine()) {
         grid.revealAllMines();
@@ -34,33 +28,42 @@ void GameController::onCellClicked(int x, int y) {
         return;
     }
 
-    if (cell.getAdjacentMines() == 0) {
-        grid.floodReveal(x, y);
-    } else {
-        cell.setRevealed(true);
-    }
+    if (cell.getAdjacentMines() == 0) { grid.floodReveal(x, y); }
+	else { cell.setRevealed(true); }
 }
 
 
+void GameController::onCellRightClicked(int x, int y) {
+    if (!grid.isValid(x, y)) return;
 
+    Cell& cell = grid.getCell(x, y);
+    if (cell.isRevealed()) return;
+
+    undo_grid = grid;
+	can_undo = true;
+
+	cell.setFlagged(!cell.isFlagged());
+}
 
 void GameController::undo() {
+	if (can_undo == false) return;
     redo_grid = grid;
     can_redo = true;
 
     grid = undo_grid;
 
 	undo_grid = Grid(w, h, mines);
+	can_undo = false;
 }
 
 void GameController::redo() {
     if (!can_redo) return;
 
     undo_grid = grid;
+	can_undo = true;
 
     grid = redo_grid;
     can_redo = false;
 }
 
 Grid& GameController::getGrid() { return grid; }
-
